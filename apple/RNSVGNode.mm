@@ -374,11 +374,21 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
 {
   if (self.clipPath) {
     _clipNode = (RNSVGClipPath *)[self.svgView getDefinedClipPath:self.clipPath];
+
+    // Release the cached clip path if it exists
     if (_cachedClipPath) {
       CGPathRelease(_cachedClipPath);
     }
-    CGAffineTransform transform = CGAffineTransformConcat(_clipNode.matrix, _clipNode.transforms);
-    _cachedClipPath = CGPathCreateCopyByTransformingPath([_clipNode getPath:context], &transform);
+
+    // Get the clip path from the clip node
+    CGPathRef clipNodePath = [_clipNode getPath:context];
+    if (clipNodePath) {
+      // Apply the clip node's transformations
+      CGAffineTransform transform = CGAffineTransformConcat(_clipNode.matrix, _clipNode.transforms);
+      _cachedClipPath = CGPathCreateCopyByTransformingPath(clipNodePath, &transform);
+    } else {
+      _cachedClipPath = nil;
+    }
   }
 
   return _cachedClipPath;

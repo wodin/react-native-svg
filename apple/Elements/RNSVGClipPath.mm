@@ -62,16 +62,30 @@ using namespace facebook::react;
   [self.svgView defineClipPath:self clipPathName:self.name];
 }
 
-- (BOOL)isSimpleClipPath
+- (CGPathRef)getPath:(CGContextRef)context
 {
-  NSArray<RNSVGPlatformView *> *children = self.subviews;
-  if (children.count == 1) {
-    RNSVGPlatformView *child = children[0];
-    if ([child class] != [RNSVGGroup class]) {
-      return true;
+  // Create a mutable path to combine child paths
+  CGMutablePathRef combinedPath = CGPathCreateMutable();
+
+  // Traverse all subviews (children) and add their paths to the combined path
+  [self traverseSubviews:^(RNSVGNode *node) {
+    if ([node isKindOfClass:[RNSVGNode class]]) {
+      // Apply the child's own transformations
+      CGAffineTransform transform = CGAffineTransformConcat(node.matrix, node.transforms);
+
+      // Get the child's path and add it to the combined path
+      CGPathRef childPath = [node getPath:context];
+      if (childPath) {
+        CGPathAddPath(combinedPath, &transform, childPath);
+      }
     }
-  }
-  return false;
+    return YES;
+  }];
+
+  // Return an immutable copy of the combined path
+  CGPathRef result = CGPathCreateCopy(combinedPath);
+  CGPathRelease(combinedPath); // Release the mutable path
+  return (CGPathRef)CFAutorelease(result);
 }
 
 @end

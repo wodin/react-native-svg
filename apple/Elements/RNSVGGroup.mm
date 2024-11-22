@@ -218,22 +218,16 @@ using namespace facebook::react;
   CGPoint transformed = CGPointApplyAffineTransform(point, self.invmatrix);
   transformed = CGPointApplyAffineTransform(transformed, self.invTransform);
 
+  // Check if the point is within the node's path bounds
   if (!CGRectContainsPoint(self.pathBounds, transformed)) {
     return nil;
   }
 
+  // Apply clip path if available
   if (self.clipPath) {
-    RNSVGClipPath *clipNode = (RNSVGClipPath *)[self.svgView getDefinedClipPath:self.clipPath];
-    if ([clipNode isSimpleClipPath]) {
-      CGPathRef clipPath = [self getClipPath];
-      if (clipPath && !CGPathContainsPoint(clipPath, nil, transformed, clipNode.clipRule == kRNSVGCGFCRuleEvenodd)) {
-        return nil;
-      }
-    } else {
-      RNSVGRenderable *clipGroup = (RNSVGRenderable *)clipNode;
-      if (![clipGroup hitTest:transformed withEvent:event]) {
-        return nil;
-      }
+    CGPathRef clipPath = [self getClipPath:UIGraphicsGetCurrentContext()];
+    if (clipPath && !CGPathContainsPoint(clipPath, nil, transformed, self.clipRule == kRNSVGCGFCRuleEvenodd)) {
+      return nil;
     }
   }
 

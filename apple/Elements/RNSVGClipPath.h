@@ -14,6 +14,6 @@
 
 @interface RNSVGClipPath : RNSVGGroup
 
-- (BOOL)isSimpleClipPath;
+- (CGPathRef)getPath:(CGContextRef)context;
 
 @end
