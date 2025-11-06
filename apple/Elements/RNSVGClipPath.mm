@@ -63,6 +63,37 @@ using namespace facebook::react;
   [self.svgView defineClipPath:self clipPathName:self.name];
 }
 
+- (BOOL)hasOverlappingChildren:(CGContextRef)context
+{
+  // Collect all child bounds
+  NSMutableArray<NSValue *> *childBounds = [NSMutableArray array];
+
+  [self traverseSubviews:^(RNSVGNode *node) {
+    if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
+      CGPathRef nodePath = [node getPath:context];
+      if (nodePath) {
+        CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
+        nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
+        [childBounds addObject:[NSValue valueWithCGRect:nodeBounds]];
+      }
+    }
+    return YES;
+  }];
+
+  // Check if any pair of bounds intersects
+  for (NSUInteger i = 0; i < childBounds.count; i++) {
+    CGRect rect1 = [childBounds[i] CGRectValue];
+    for (NSUInteger j = i + 1; j < childBounds.count; j++) {
+      CGRect rect2 = [childBounds[j] CGRectValue];
+      if (CGRectIntersectsRect(rect1, rect2)) {
+        return YES;
+      }
+    }
+  }
+
+  return NO;
+}
+
 - (CGImageRef)createMask:(CGContextRef)context
 {
   // Calculate bounds of all ClipPath children
@@ -93,6 +124,18 @@ using namespace facebook::react;
     return NULL;
   }
 
+  // Resolution scaling: limit maximum bitmap dimension to 2048px
+  // If mask is larger, scale down proportionally to reduce memory usage
+  const size_t maxDimension = 2048;
+  CGFloat scale = 1.0;
+  if (width > maxDimension || height > maxDimension) {
+    CGFloat scaleX = (CGFloat)maxDimension / width;
+    CGFloat scaleY = (CGFloat)maxDimension / height;
+    scale = fmin(scaleX, scaleY);
+    width = (size_t)ceil(width * scale);
+    height = (size_t)ceil(height * scale);
+  }
+
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
   CGContextRef bitmapContext = CGBitmapContextCreate(
       NULL,
@@ -108,7 +151,9 @@ using namespace facebook::react;
     return NULL;
   }
 
-  // Set up coordinate system: translate so clipBounds.origin is at (0,0)
+  // Set up coordinate system: scale and translate
+  // Scale down if resolution was limited, then translate so clipBounds.origin is at (0,0)
+  CGContextScaleCTM(bitmapContext, scale, scale);
   CGContextTranslateCTM(bitmapContext, -clipBounds.origin.x, -clipBounds.origin.y);
 
   // Clear to black (outside clip region)
