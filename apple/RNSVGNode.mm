@@ -416,8 +416,11 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   NSArray<RNSVGPlatformView *> *children = _clipNode.subviews;
   BOOL isSimple = (children.count == 1) && ([children[0] class] != [RNSVGGroup class]);
 
-  if (isSimple) {
-    // Fast path: single child, use path-based clipping
+  // Check if children don't overlap for fast path optimization
+  BOOL hasOverlap = !isSimple && [_clipNode hasOverlappingChildren:context];
+
+  if (isSimple || !hasOverlap) {
+    // Fast path: single child or non-overlapping children, use path-based clipping
     CGPathRef clipPath = [self getClipPath:context];
     if (clipPath) {
       CGContextAddPath(context, clipPath);
@@ -428,7 +431,7 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
       }
     }
   } else {
-    // Complex path: multiple children or Group child, use mask-based clipping
+    // Slow path: overlapping children, use mask-based clipping
     if (!_cachedClipMask) {
       _cachedClipMask = [_clipNode createMask:context];
 

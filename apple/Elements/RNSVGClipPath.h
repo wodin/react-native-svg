@@ -14,6 +14,7 @@
 
 @interface RNSVGClipPath : RNSVGGroup
 
+- (BOOL)hasOverlappingChildren:(CGContextRef)context;
 - (CGImageRef)createMask:(CGContextRef)context;
 
 @end
