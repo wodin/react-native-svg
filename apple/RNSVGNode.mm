@@ -27,6 +27,8 @@ using namespace facebook::react;
   BOOL _transparent;
   RNSVGClipPath *_clipNode;
   CGPathRef _cachedClipPath;
+  CGImageRef _cachedClipMask;
+  CGRect _cachedClipMaskBounds;
   CGFloat canvasWidth;
   CGFloat canvasHeight;
   CGFloat canvasDiagonal;
@@ -307,6 +309,8 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   }
   CGPathRelease(_cachedClipPath);
   _cachedClipPath = nil;
+  CGImageRelease(_cachedClipMask);
+  _cachedClipMask = nil;
   _clipPath = clipPath;
   [self invalidate];
 }
@@ -399,14 +403,57 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
 
 - (void)clip:(CGContextRef)context
 {
-  CGPathRef clipPath = [self getClipPath:context];
+  if (!self.clipPath) {
+    return;
+  }
 
-  if (clipPath) {
-    CGContextAddPath(context, clipPath);
-    if (_clipRule == kRNSVGCGFCRuleEvenodd) {
-      CGContextEOClip(context);
-    } else {
-      CGContextClip(context);
+  _clipNode = (RNSVGClipPath *)[self.svgView getDefinedClipPath:self.clipPath];
+  if (!_clipNode) {
+    return;
+  }
+
+  // Check if clipPath is simple (single non-Group child) for fast path
+  NSArray<RNSVGPlatformView *> *children = _clipNode.subviews;
+  BOOL isSimple = (children.count == 1) && ([children[0] class] != [RNSVGGroup class]);
+
+  if (isSimple) {
+    // Fast path: single child, use path-based clipping
+    CGPathRef clipPath = [self getClipPath:context];
+    if (clipPath) {
+      CGContextAddPath(context, clipPath);
+      if (_clipRule == kRNSVGCGFCRuleEvenodd) {
+        CGContextEOClip(context);
+      } else {
+        CGContextClip(context);
+      }
+    }
+  } else {
+    // Complex path: multiple children or Group child, use mask-based clipping
+    if (!_cachedClipMask) {
+      _cachedClipMask = [_clipNode createMask:context];
+
+      // Store bounds for mask positioning
+      if (_cachedClipMask) {
+        __block CGRect clipBounds = CGRectNull;
+        [_clipNode traverseSubviews:^(RNSVGNode *node) {
+          if ([node isKindOfClass:[RNSVGNode class]]) {
+            CGPathRef nodePath = [node getPath:context];
+            if (nodePath) {
+              CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
+              nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
+              clipBounds = CGRectUnion(clipBounds, nodeBounds);
+            }
+          }
+          return YES;
+        }];
+        _cachedClipMaskBounds = clipBounds;
+      }
+    }
+
+    if (_cachedClipMask) {
+      // Apply clipNode's transform to mask bounds
+      CGRect maskBounds = CGRectApplyAffineTransform(_cachedClipMaskBounds, _clipNode.matrix);
+      CGContextClipToMask(context, maskBounds, _cachedClipMask);
     }
   }
 }
@@ -637,6 +684,7 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
 - (void)dealloc
 {
   CGPathRelease(_cachedClipPath);
+  CGImageRelease(_cachedClipMask);
   CGPathRelease(_strokePath);
   CGPathRelease(_path);
   CGPathRelease(_markerPath);

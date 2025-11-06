@@ -7,6 +7,7 @@
  */
 
 #import "RNSVGClipPath.h"
+#import "RNSVGMask.h"
 
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTConversions.h>
@@ -62,16 +63,90 @@ using namespace facebook::react;
   [self.svgView defineClipPath:self clipPathName:self.name];
 }
 
-- (BOOL)isSimpleClipPath
+- (CGImageRef)createMask:(CGContextRef)context
 {
-  NSArray<RNSVGPlatformView *> *children = self.subviews;
-  if (children.count == 1) {
-    RNSVGPlatformView *child = children[0];
-    if ([child class] != [RNSVGGroup class]) {
-      return true;
+  // Calculate bounds of all ClipPath children
+  __block CGRect clipBounds = CGRectNull;
+  [self traverseSubviews:^(RNSVGNode *node) {
+    if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
+      CGPathRef nodePath = [node getPath:context];
+      if (nodePath) {
+        CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
+        nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
+        clipBounds = CGRectUnion(clipBounds, nodeBounds);
+      }
     }
+    return YES;
+  }];
+
+  // Handle empty bounds
+  if (CGRectIsNull(clipBounds) || CGRectIsEmpty(clipBounds)) {
+    return NULL;
   }
-  return false;
+
+  // Create offscreen bitmap context for mask
+  // Masks should be grayscale
+  size_t width = (size_t)ceil(clipBounds.size.width);
+  size_t height = (size_t)ceil(clipBounds.size.height);
+
+  if (width == 0 || height == 0) {
+    return NULL;
+  }
+
+  CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
+  CGContextRef bitmapContext = CGBitmapContextCreate(
+      NULL,
+      width,
+      height,
+      8,
+      width,
+      colorSpace,
+      kCGImageAlphaNone);
+  CGColorSpaceRelease(colorSpace);
+
+  if (!bitmapContext) {
+    return NULL;
+  }
+
+  // Set up coordinate system: translate so clipBounds.origin is at (0,0)
+  CGContextTranslateCTM(bitmapContext, -clipBounds.origin.x, -clipBounds.origin.y);
+
+  // Clear to black (outside clip region)
+  CGContextSetGrayFillColor(bitmapContext, 0.0, 1.0);
+  CGContextFillRect(bitmapContext, clipBounds);
+
+  // Render each child with its clipRule, filling with white (inside clip region)
+  // Each fill UNIONs with previous via source-over blend mode
+  CGContextSetGrayFillColor(bitmapContext, 1.0, 1.0);
+
+  [self traverseSubviews:^(RNSVGNode *node) {
+    if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
+      CGPathRef nodePath = [node getPath:context];
+      if (nodePath) {
+        CGContextSaveGState(bitmapContext);
+
+        // Apply node's transform
+        CGContextConcatCTM(bitmapContext, node.matrix);
+
+        // Add path and fill according to node's clipRule
+        CGContextAddPath(bitmapContext, nodePath);
+        if (node.clipRule == kRNSVGCGFCRuleEvenodd) {
+          CGContextEOFillPath(bitmapContext);
+        } else {
+          CGContextFillPath(bitmapContext);
+        }
+
+        CGContextRestoreGState(bitmapContext);
+      }
+    }
+    return YES;
+  }];
+
+  // Create image from bitmap context
+  CGImageRef maskImage = CGBitmapContextCreateImage(bitmapContext);
+  CGContextRelease(bitmapContext);
+
+  return maskImage;
 }
 
 @end

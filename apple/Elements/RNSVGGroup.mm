@@ -228,17 +228,9 @@ using namespace facebook::react;
   }
 
   if (self.clipPath) {
-    RNSVGClipPath *clipNode = (RNSVGClipPath *)[self.svgView getDefinedClipPath:self.clipPath];
-    if ([clipNode isSimpleClipPath]) {
-      CGPathRef clipPath = [self getClipPath];
-      if (clipPath && !CGPathContainsPoint(clipPath, nil, transformed, clipNode.clipRule == kRNSVGCGFCRuleEvenodd)) {
-        return nil;
-      }
-    } else {
-      RNSVGRenderable *clipGroup = (RNSVGRenderable *)clipNode;
-      if (![clipGroup hitTest:transformed withEvent:event]) {
-        return nil;
-      }
+    CGPathRef clipPath = [self getClipPath];
+    if (clipPath && !CGPathContainsPoint(clipPath, nil, transformed, self.clipRule == kRNSVGCGFCRuleEvenodd)) {
+      return nil;
     }
   }
 

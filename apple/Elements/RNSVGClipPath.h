@@ -14,6 +14,6 @@
 
 @interface RNSVGClipPath : RNSVGGroup
 
-- (BOOL)isSimpleClipPath;
+- (CGImageRef)createMask:(CGContextRef)context;
 
 @end
