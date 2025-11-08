@@ -4,7 +4,8 @@ appId: com.reactnativesvg.clippathtest
 - assertVisible: "ClipPath Tests"
 
 # Navigate to ClipPath Transform test
-- tapOn: "ClipPath Transform"
+- tapOn:
+    id: "test-button-transform"
 - assertVisible: "Blue rect should be clipped at 45° angle"
 
 # Wait for render

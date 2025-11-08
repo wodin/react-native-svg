@@ -6,12 +6,14 @@ appId: com.reactnativesvg.clippathtest
 - assertVisible: "ClipPath Tests"
 
 # Test 1: ClipPath Transform
-- tapOn: "ClipPath Transform"
+- tapOn:
+    id: "test-button-transform"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-transform
 
 # Test 2: ClipPath Cache
-- tapOn: "ClipPath Cache"
+- tapOn:
+    id: "test-button-cache"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-cache-initial
 - tapOn: "Switch to Right Circle"
@@ -19,11 +21,13 @@ appId: com.reactnativesvg.clippathtest
 - takeScreenshot: all-tests-cache-toggled
 
 # Test 3: ClipPath ClipRule
-- tapOn: "ClipPath ClipRule"
+- tapOn:
+    id: "test-button-cliprule"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-cliprule
 
 # Test 4: Android Evenodd
-- tapOn: "Android Evenodd"
+- tapOn:
+    id: "test-button-evenodd"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-android-evenodd

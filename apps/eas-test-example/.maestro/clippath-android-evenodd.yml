@@ -4,7 +4,8 @@ appId: com.reactnativesvg.clippathtest
 - assertVisible: "ClipPath Tests"
 
 # Navigate to Android Evenodd test
-- tapOn: "Android Evenodd"
+- tapOn:
+    id: "test-button-evenodd"
 - assertVisible: "Overlap area should be hole (Android evenodd)"
 
 # Wait for render
