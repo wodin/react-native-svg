@@ -228,9 +228,16 @@ using namespace facebook::react;
   }
 
   if (self.clipPath) {
+    RNSVGClipPath *clipNode = (RNSVGClipPath *)[self.svgView getDefinedClipPath:self.clipPath];
     CGPathRef clipPath = [self getClipPath];
-    if (clipPath && !CGPathContainsPoint(clipPath, nil, transformed, self.clipRule == kRNSVGCGFCRuleEvenodd)) {
-      return nil;
+    if (clipPath && clipNode) {
+      // Use clipPath's uniform clipRule for hit-testing, consistent with rendering
+      RNSVGCGFCRule clipRule;
+      BOOL hasUniformRule = [clipNode getUniformClipRule:&clipRule context:UIGraphicsGetCurrentContext()];
+      BOOL useEvenodd = hasUniformRule ? (clipRule == kRNSVGCGFCRuleEvenodd) : YES;
+      if (!CGPathContainsPoint(clipPath, nil, transformed, useEvenodd)) {
+        return nil;
+      }
     }
   }
 
