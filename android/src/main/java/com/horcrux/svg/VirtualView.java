@@ -353,16 +353,22 @@ public abstract class VirtualView extends ReactViewGroup {
       ClipPathView mClipNode = (ClipPathView) getSvgView().getDefinedClipPath(mClipPath);
 
       if (mClipNode != null) {
-        Path clipPath = mClipNode.getPath(canvas, paint, Region.Op.UNION);
+        // Use clipPath's clipRule to determine both path combining and fill type
+        // For evenodd: simple path combining preserves overlaps needed for holes
+        // For nonzero: UNION combining per SVG spec
+        Path clipPath =
+            mClipNode.mClipRule == CLIP_RULE_EVENODD
+                ? mClipNode.getPath(canvas, paint)
+                : mClipNode.getPath(canvas, paint, Region.Op.UNION);
         clipPath.transform(mClipNode.mMatrix);
-        switch (mClipRule) {
+        switch (mClipNode.mClipRule) {
           case CLIP_RULE_EVENODD:
             clipPath.setFillType(Path.FillType.EVEN_ODD);
             break;
           case CLIP_RULE_NONZERO:
             break;
           default:
-            FLog.w(ReactConstants.TAG, "RNSVG: clipRule: " + mClipRule + " unrecognized");
+            FLog.w(ReactConstants.TAG, "RNSVG: clipRule: " + mClipNode.mClipRule + " unrecognized");
         }
         mCachedClipPath = clipPath;
       } else {
