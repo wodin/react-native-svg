@@ -1,0 +1,36 @@
+appId: com.reactnativesvg.clippathtest
+---
+- launchApp
+- assertVisible: "ClipPath Tests"
+
+# Navigate to ClipPath Cache test
+- tapOn: "ClipPath Cache"
+- assertVisible: "Clipping with LEFT circle"
+- assertVisible: "Switch to Right Circle"
+
+# Wait for render
+- waitForAnimationToEnd
+
+# Take screenshot of initial state (left circle)
+- takeScreenshot: clippath-cache-left
+
+# Toggle to right circle
+- tapOn: "Switch to Right Circle"
+- assertVisible: "Clipping with RIGHT circle"
+- assertVisible: "Switch to Left Circle"
+
+# Wait for render update
+- waitForAnimationToEnd
+
+# Take screenshot after toggle (right circle)
+- takeScreenshot: clippath-cache-right
+
+# Toggle back to left
+- tapOn: "Switch to Left Circle"
+- assertVisible: "Clipping with LEFT circle"
+- waitForAnimationToEnd
+- takeScreenshot: clippath-cache-left-again
+
+# Visual assertions:
+# Expected: Orange rectangle should move from left to right and back
+# Bug behavior: Rectangle stays in original position (cache not invalidated)

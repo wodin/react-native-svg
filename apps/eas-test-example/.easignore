@@ -1,0 +1,16 @@
+# Local development files
+.expo/
+.maestro/screenshots/
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# Claude
+.claude/
+
+# Test artifacts
+__tests__/
+*.test.js
+*.spec.js

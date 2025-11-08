@@ -1,0 +1,29 @@
+appId: com.reactnativesvg.clippathtest
+---
+# Run all ClipPath tests in sequence
+
+- launchApp
+- assertVisible: "ClipPath Tests"
+
+# Test 1: ClipPath Transform
+- tapOn: "ClipPath Transform"
+- waitForAnimationToEnd
+- takeScreenshot: all-tests-transform
+
+# Test 2: ClipPath Cache
+- tapOn: "ClipPath Cache"
+- waitForAnimationToEnd
+- takeScreenshot: all-tests-cache-initial
+- tapOn: "Switch to Right Circle"
+- waitForAnimationToEnd
+- takeScreenshot: all-tests-cache-toggled
+
+# Test 3: ClipPath ClipRule
+- tapOn: "ClipPath ClipRule"
+- waitForAnimationToEnd
+- takeScreenshot: all-tests-cliprule
+
+# Test 4: Android Evenodd
+- tapOn: "Android Evenodd"
+- waitForAnimationToEnd
+- takeScreenshot: all-tests-android-evenodd

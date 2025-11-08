@@ -1,0 +1,18 @@
+appId: com.reactnativesvg.clippathtest
+---
+- launchApp
+- assertVisible: "ClipPath Tests"
+
+# Navigate to ClipPath Transform test
+- tapOn: "ClipPath Transform"
+- assertVisible: "Blue rect should be clipped at 45° angle"
+
+# Wait for render
+- waitForAnimationToEnd
+
+# Take screenshot for visual validation
+- takeScreenshot: clippath-transform
+
+# Visual assertions (can be compared against reference)
+# Expected: Blue rectangle clipped at 45-degree angle by rotated circles
+# Bug behavior: Rectangle clipped by axis-aligned (unrotated) circles

@@ -1,0 +1,18 @@
+appId: com.reactnativesvg.clippathtest
+---
+- launchApp
+- assertVisible: "ClipPath Tests"
+
+# Navigate to ClipPath ClipRule test
+- tapOn: "ClipPath ClipRule"
+- assertVisible: "Green rect should have hole in center (evenodd)"
+
+# Wait for render
+- waitForAnimationToEnd
+
+# Take screenshot for visual validation
+- takeScreenshot: clippath-cliprule
+
+# Visual assertions:
+# Expected: Green rectangle with hole in center (evenodd clipRule from child)
+# Bug behavior: Green rectangle without hole (nonzero used instead of evenodd)
