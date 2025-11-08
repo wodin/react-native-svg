@@ -322,6 +322,8 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   }
   CGPathRelease(_cachedClipPath);
   _cachedClipPath = nil;
+  CGImageRelease(_cachedClipMask);
+  _cachedClipMask = nil;
   _clipRule = clipRule;
   [self invalidate];
 }
@@ -412,6 +414,14 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
     return;
   }
 
+  // Clear cached clip data if clipPath definition has changed
+  if (_clipNode.dirty) {
+    CGPathRelease(_cachedClipPath);
+    _cachedClipPath = nil;
+    CGImageRelease(_cachedClipMask);
+    _cachedClipMask = nil;
+  }
+
   // Check if clipPath is simple (single non-Group child) for fast path
   NSArray<RNSVGPlatformView *> *children = _clipNode.subviews;
   BOOL isSimple = (children.count == 1) && ([children[0] class] != [RNSVGGroup class]);
@@ -419,12 +429,16 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   // Check if children don't overlap for fast path optimization
   BOOL hasOverlap = !isSimple && [_clipNode hasOverlappingChildren:context];
 
-  if (isSimple || !hasOverlap) {
-    // Fast path: single child or non-overlapping children, use path-based clipping
+  // For fast path, check if all children have uniform clipRule
+  RNSVGCGFCRule clipRule;
+  BOOL canUseFastPath = (isSimple || !hasOverlap) && [_clipNode getUniformClipRule:&clipRule context:context];
+
+  if (canUseFastPath) {
+    // Fast path: single child or non-overlapping children with uniform clipRule
     CGPathRef clipPath = [self getClipPath:context];
     if (clipPath) {
       CGContextAddPath(context, clipPath);
-      if (_clipRule == kRNSVGCGFCRuleEvenodd) {
+      if (clipRule == kRNSVGCGFCRuleEvenodd) {
         CGContextEOClip(context);
       } else {
         CGContextClip(context);
@@ -435,7 +449,7 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
     if (!_cachedClipMask) {
       _cachedClipMask = [_clipNode createMask:context];
 
-      // Store bounds for mask positioning
+      // Store bounds for mask positioning (including clipPath transform)
       if (_cachedClipMask) {
         __block CGRect clipBounds = CGRectNull;
         [_clipNode traverseSubviews:^(RNSVGNode *node) {
@@ -443,7 +457,9 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
             CGPathRef nodePath = [node getPath:context];
             if (nodePath) {
               CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
+              // Apply child's transform then clipPath's transform
               nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
+              nodeBounds = CGRectApplyAffineTransform(nodeBounds, _clipNode.matrix);
               clipBounds = CGRectUnion(clipBounds, nodeBounds);
             }
           }
@@ -454,9 +470,8 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
     }
 
     if (_cachedClipMask) {
-      // Apply clipNode's transform to mask bounds
-      CGRect maskBounds = CGRectApplyAffineTransform(_cachedClipMaskBounds, _clipNode.matrix);
-      CGContextClipToMask(context, maskBounds, _cachedClipMask);
+      // Mask bounds already include clipPath transform, apply directly
+      CGContextClipToMask(context, _cachedClipMaskBounds, _cachedClipMask);
     }
   }
 }

@@ -94,16 +94,48 @@ using namespace facebook::react;
   return NO;
 }
 
+- (BOOL)getUniformClipRule:(RNSVGCGFCRule *)outClipRule context:(CGContextRef)context
+{
+  __block BOOL firstChild = YES;
+  __block RNSVGCGFCRule uniformRule = kRNSVGCGFCRuleEvenodd;
+  __block BOOL isUniform = YES;
+
+  [self traverseSubviews:^(RNSVGNode *node) {
+    if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
+      CGPathRef nodePath = [node getPath:context];
+      if (nodePath) {
+        if (firstChild) {
+          uniformRule = node.clipRule;
+          firstChild = NO;
+        } else if (node.clipRule != uniformRule) {
+          isUniform = NO;
+          return NO; // Stop iteration
+        }
+      }
+    }
+    return YES;
+  }];
+
+  if (isUniform && !firstChild) {
+    *outClipRule = uniformRule;
+    return YES;
+  }
+  return NO;
+}
+
 - (CGImageRef)createMask:(CGContextRef)context
 {
-  // Calculate bounds of all ClipPath children
+  // Calculate bounds of all ClipPath children in final coordinate space
+  // (including both child transforms and clipPath's own transform)
   __block CGRect clipBounds = CGRectNull;
   [self traverseSubviews:^(RNSVGNode *node) {
     if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
       CGPathRef nodePath = [node getPath:context];
       if (nodePath) {
         CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
+        // Apply child's transform then clipPath's transform
         nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
+        nodeBounds = CGRectApplyAffineTransform(nodeBounds, self.matrix);
         clipBounds = CGRectUnion(clipBounds, nodeBounds);
       }
     }
@@ -170,7 +202,8 @@ using namespace facebook::react;
       if (nodePath) {
         CGContextSaveGState(bitmapContext);
 
-        // Apply node's transform
+        // Apply clipPath's transform, then child's transform
+        CGContextConcatCTM(bitmapContext, self.matrix);
         CGContextConcatCTM(bitmapContext, node.matrix);
 
         // Add path and fill according to node's clipRule
