@@ -1,0 +1,189 @@
+import * as React from "react";
+import Svg, { Defs, G, Text, Path, Rect } from "react-native-svg";
+/* SVGR has dropped some elements not supported by react-native-svg: d:SVGTestCase, title, fontFace */
+const SvgPathsData07T = (props) => (
+  <Svg
+    baseProfile="tiny"
+    id="svg-root"
+    width="100%"
+    height="100%"
+    viewBox="0 0 480 360"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+    {...props}
+  >
+    <Defs></Defs>
+    <G
+      id="test-body-content"
+      fontFamily="SVGFreeSansASCII,sans-serif"
+      fontSize={18}
+    >
+      <G transform="scale(1.8) translate(-200, -150)">
+        <Text fontSize={12} x={288} y={180}>
+          {"m, h, v, h"}
+        </Text>
+        <Text fontSize={12} x={288} y={194}>
+          {"v, h, v, h"}
+        </Text>
+        <Text fontSize={12} x={304} y={208}>
+          {"v, z"}
+        </Text>
+        <Path
+          id="Stairs_stroke_mhvz"
+          fill="none"
+          stroke="#000000"
+          d="   m  240.00000  190.00000    h   30.00000   v   30.00000    h   30.00000   v   30.00000    h   30.00000   v   30.00000    h  -90.00000   v  -90.00000    z  "
+        />
+        <Rect
+          x={238}
+          y={188}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={268}
+          y={188}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={268}
+          y={218}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={298}
+          y={218}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={298}
+          y={248}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={328}
+          y={248}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={328}
+          y={278}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={238}
+          y={278}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Path
+          id="Stairs_fill_mhvz"
+          fill="#FFFF00"
+          stroke="none"
+          d="   m  350.00000  190.00000    h   30.00000   v   30.00000    h   30.00000   v   30.00000    h   30.00000   v   30.00000    h  -90.00000   v  -90.00000    z  "
+        />
+        <Rect
+          x={348}
+          y={188}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={378}
+          y={188}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={378}
+          y={218}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={408}
+          y={218}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={408}
+          y={248}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={438}
+          y={248}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={438}
+          y={278}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+        <Rect
+          x={348}
+          y={278}
+          width={4}
+          height={4}
+          fill="#0000FF"
+          stroke="none"
+        />
+      </G>
+    </G>
+    <G fontFamily="SVGFreeSansASCII,sans-serif" fontSize={32}>
+      <Text id="revision" x={10} y={340} stroke="none" fill="black">
+        {"$Revision: 1.7 $"}
+      </Text>
+    </G>
+    <Rect
+      id="test-frame"
+      x={1}
+      y={1}
+      width={478}
+      height={358}
+      fill="none"
+      stroke="#000000"
+    />
+  </Svg>
+);
+export default SvgPathsData07T;

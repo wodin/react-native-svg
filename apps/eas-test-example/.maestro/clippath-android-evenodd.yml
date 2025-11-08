@@ -1,0 +1,18 @@
+appId: com.reactnativesvg.clippathtest
+---
+- launchApp
+- assertVisible: "ClipPath Tests"
+
+# Navigate to Android Evenodd test
+- tapOn: "Android Evenodd"
+- assertVisible: "Overlap area should be hole (Android evenodd)"
+
+# Wait for render
+- waitForAnimationToEnd
+
+# Take screenshot for visual validation
+- takeScreenshot: clippath-android-evenodd
+
+# Visual assertions (particularly important for Android):
+# Expected: Purple rectangle clipped by two circles with hole in overlap area
+# Bug behavior: Overlap area filled (UNION flattens evenodd holes)

@@ -1,0 +1,55 @@
+{
+  "cli": {
+    "version": ">= 16.26.0",
+    "promptToConfigurePushNotifications": false,
+    "appVersionSource": "remote",
+    "requireCommit": false
+  },
+  "build": {
+    "base": {
+      "node": "22.11.0"
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
+    "sim-dev": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      },
+      "channel": "sim-dev"
+    },
+    "test": {
+      "ios": {
+        "simulator": true,
+        "resourceClass": "m-medium",
+        "buildConfiguration": "Release"
+      },
+      "android": {
+        "buildType": "apk",
+        "resourceClass": "medium"
+      },
+      "channel": "test"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "sim-preview": {
+      "extends": "preview",
+      "ios": {
+        "simulator": true
+      },
+      "channel": "sim-preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
