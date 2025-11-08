@@ -16,5 +16,6 @@
 
 - (BOOL)hasOverlappingChildren:(CGContextRef)context;
 - (CGImageRef)createMask:(CGContextRef)context;
+- (BOOL)getUniformClipRule:(RNSVGCGFCRule *)outClipRule context:(CGContextRef)context;
 
 @end
