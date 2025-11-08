@@ -4,7 +4,8 @@ appId: com.reactnativesvg.clippathtest
 - assertVisible: "ClipPath Tests"
 
 # Navigate to ClipPath ClipRule test
-- tapOn: "ClipPath ClipRule"
+- tapOn:
+    id: "test-button-cliprule"
 - assertVisible: "Green rect should have hole in center (evenodd)"
 
 # Wait for render

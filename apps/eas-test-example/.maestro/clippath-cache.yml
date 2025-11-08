@@ -4,7 +4,8 @@ appId: com.reactnativesvg.clippathtest
 - assertVisible: "ClipPath Tests"
 
 # Navigate to ClipPath Cache test
-- tapOn: "ClipPath Cache"
+- tapOn:
+    id: "test-button-cache"
 - assertVisible: "Clipping with LEFT circle"
 - assertVisible: "Switch to Right Circle"
 
