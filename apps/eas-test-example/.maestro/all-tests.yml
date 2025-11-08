@@ -21,15 +21,21 @@ appId: com.reactnativesvg.clippathtest
 - takeScreenshot: all-tests-cache-toggled
 
 # Test 3: ClipPath ClipRule
-- scroll
+- scrollUntilVisible:
+    element:
+      id: "test-button-cliprule"
+    direction: RIGHT
 - tapOn:
     id: "test-button-cliprule"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-cliprule
 
 # Test 4: Android Evenodd
-- scroll
+- scrollUntilVisible:
+    element:
+      id: "test-button-android-evenodd"
+    direction: RIGHT
 - tapOn:
-    id: "test-button-evenodd"
+    id: "test-button-android-evenodd"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-android-evenodd
