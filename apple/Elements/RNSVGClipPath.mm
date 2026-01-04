@@ -81,24 +81,33 @@ using namespace facebook::react;
   [self.svgView defineClipPath:self clipPathName:self.name];
 }
 
-- (BOOL)hasOverlappingChildren:(CGContextRef)context
+// Helper to traverse children and collect transformed bounds.
+// Applies node.matrix to each child's path bounds, then calls block.
+- (void)enumerateChildBounds:(CGContextRef)context block:(void (^)(CGRect bounds))block
 {
-  // Collect all child bounds
-  std::vector<CGRect> childBounds;
-  childBounds.reserve(4);
-  std::vector<CGRect> *childBoundsPtr = &childBounds;
-
   [self traverseSubviews:^(RNSVGNode *node) {
     if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
       CGPathRef nodePath = [node getPath:context];
       if (nodePath) {
         CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
         nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
-        childBoundsPtr->push_back(nodeBounds);
+        block(nodeBounds);
       }
     }
     return YES;
   }];
+}
+
+- (BOOL)hasOverlappingChildren:(CGContextRef)context
+{
+  std::vector<CGRect> childBounds;
+  childBounds.reserve(4);
+  std::vector<CGRect> *childBoundsPtr = &childBounds;
+
+  [self enumerateChildBounds:context
+                       block:^(CGRect bounds) {
+                         childBoundsPtr->push_back(bounds);
+                       }];
 
   // O(n²) pairwise intersection check - acceptable for typical ClipPaths (<20 children).
   // Sweep-line O(n log n) exists but overkill: real-world ClipPaths rarely exceed 10-20 children,
@@ -151,19 +160,14 @@ using namespace facebook::react;
   // Calculate bounds of all ClipPath children in final coordinate space
   // (including both child transforms and clipPath's own transform)
   __block CGRect clipBounds = CGRectNull;
-  [self traverseSubviews:^(RNSVGNode *node) {
-    if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
-      CGPathRef nodePath = [node getPath:context];
-      if (nodePath) {
-        CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
-        // Apply child's transform then clipPath's transform
-        nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
-        nodeBounds = CGRectApplyAffineTransform(nodeBounds, self.matrix);
-        clipBounds = CGRectUnion(clipBounds, nodeBounds);
-      }
-    }
-    return YES;
-  }];
+  CGAffineTransform clipPathTransform = self.matrix;
+
+  [self enumerateChildBounds:context
+                       block:^(CGRect bounds) {
+                         // Apply clipPath's transform on top of child transform
+                         bounds = CGRectApplyAffineTransform(bounds, clipPathTransform);
+                         clipBounds = CGRectUnion(clipBounds, bounds);
+                       }];
 
   if (outBounds) {
     *outBounds = clipBounds;
