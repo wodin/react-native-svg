@@ -187,8 +187,11 @@ using namespace facebook::react;
     return NULL;
   }
 
-  // Resolution scaling: limit maximum bitmap dimension to 2048px
-  // If mask is larger, scale down proportionally to reduce memory usage
+  // Resolution scaling: limit maximum bitmap dimension to 2048px.
+  // Rationale: A 2048x2048 grayscale (8-bit) bitmap = 4MB memory.
+  // Larger masks risk memory pressure on low-end devices and offer
+  // diminishing visual returns (masks are binary clip regions).
+  // 2048px covers most use cases; scaling preserves aspect ratio.
   const size_t maxDimension = 2048;
   CGFloat scale = 1.0;
   if (width > maxDimension || height > maxDimension) {
