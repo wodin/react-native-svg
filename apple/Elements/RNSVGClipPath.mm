@@ -100,7 +100,9 @@ using namespace facebook::react;
     return YES;
   }];
 
-  // Check if any pair of bounds intersects
+  // O(n²) pairwise intersection check - acceptable for typical ClipPaths (<20 children).
+  // Sweep-line O(n log n) exists but overkill: real-world ClipPaths rarely exceed 10-20 children,
+  // and sweep-line's overhead (event sorting, tree ops) wouldn't pay off until 100+ children.
   size_t count = childBounds.size();
   for (size_t i = 0; i < count; i++) {
     const CGRect &rect1 = childBounds[i];
