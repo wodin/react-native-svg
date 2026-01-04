@@ -699,7 +699,7 @@ UInt32 saturate(CGFloat value)
     if (clipPath && clipNode) {
       // Use clipPath's uniform clipRule for hit-testing, consistent with rendering
       RNSVGCGFCRule clipRule;
-      BOOL hasUniformRule = [clipNode getUniformClipRule:&clipRule context:nil];
+      BOOL hasUniformRule = [clipNode getUniformClipRule:&clipRule context:UIGraphicsGetCurrentContext()];
       BOOL useEvenodd = hasUniformRule ? (clipRule == kRNSVGCGFCRuleEvenodd) : YES;
       if (!CGPathContainsPoint(clipPath, nil, transformed, useEvenodd)) {
         return nil;

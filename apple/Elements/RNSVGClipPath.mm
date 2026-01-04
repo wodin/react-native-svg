@@ -86,6 +86,7 @@ using namespace facebook::react;
   // Collect all child bounds
   std::vector<CGRect> childBounds;
   childBounds.reserve(4);
+  std::vector<CGRect> *childBoundsPtr = &childBounds;
 
   [self traverseSubviews:^(RNSVGNode *node) {
     if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
@@ -93,7 +94,7 @@ using namespace facebook::react;
       if (nodePath) {
         CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
         nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
-        childBounds.push_back(nodeBounds);
+        childBoundsPtr->push_back(nodeBounds);
       }
     }
     return YES;
