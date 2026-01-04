@@ -16,7 +16,8 @@ appId: com.reactnativesvg.clippathtest
 - takeScreenshot: clippath-cache-left
 
 # Toggle to right circle
-- tapOn: "Switch to Right Circle"
+- tapOn:
+    id: "toggle-circle-button"
 - assertVisible: "Clipping with RIGHT circle"
 - assertVisible: "Switch to Left Circle"
 
@@ -27,7 +28,8 @@ appId: com.reactnativesvg.clippathtest
 - takeScreenshot: clippath-cache-right
 
 # Toggle back to left
-- tapOn: "Switch to Left Circle"
+- tapOn:
+    id: "toggle-circle-button"
 - assertVisible: "Clipping with LEFT circle"
 - waitForAnimationToEnd
 - takeScreenshot: clippath-cache-left-again

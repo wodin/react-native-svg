@@ -16,7 +16,8 @@ appId: com.reactnativesvg.clippathtest
     id: "test-button-cache"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-cache-initial
-- tapOn: "Switch to Right Circle"
+- tapOn:
+    id: "toggle-circle-button"
 - waitForAnimationToEnd
 - takeScreenshot: all-tests-cache-toggled
 
