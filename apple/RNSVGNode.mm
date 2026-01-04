@@ -413,7 +413,12 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
     return;
   }
 
-  // Clear cached clip data if clipPath definition has changed
+  // Cache Invalidation Contract:
+  // ClipPath.dirty is set to true when:
+  //   1. ClipPath's own properties change (via invalidate)
+  //   2. Any child of ClipPath changes (propagates up via RNSVGContainer.invalidate)
+  // ClipPath.dirty is reset to false in parseReference after re-rendering.
+  // This ensures cached clip paths/masks are invalidated on any mutation.
   if (_clipNode.dirty) {
     CGPathRelease(_cachedClipPath);
     _cachedClipPath = nil;
