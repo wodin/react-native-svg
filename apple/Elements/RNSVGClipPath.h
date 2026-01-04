@@ -18,5 +18,6 @@
 - (CGImageRef)createMask:(CGContextRef)context bounds:(CGRect *)outBounds;
 - (BOOL)getUniformClipRule:(RNSVGCGFCRule *)outClipRule context:(CGContextRef)context;
 - (BOOL)canUseFastPath:(CGContextRef)context clipRule:(RNSVGCGFCRule *)outClipRule;
+- (BOOL)containsPoint:(CGPoint)point inPath:(CGPathRef)clipPath context:(CGContextRef)context;
 
 @end

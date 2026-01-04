@@ -25,7 +25,6 @@ import com.facebook.react.uimanager.UIManagerHelper;
 import com.facebook.react.uimanager.events.EventDispatcher;
 import com.facebook.react.views.view.ReactViewGroup;
 import com.horcrux.svg.events.SvgOnLayoutEvent;
-
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 
@@ -353,9 +352,10 @@ public abstract class VirtualView extends ReactViewGroup {
       ClipPathView mClipNode = (ClipPathView) getSvgView().getDefinedClipPath(mClipPath);
 
       if (mClipNode != null) {
-        // Use clipPath's clipRule to determine both path combining and fill type
-        // For evenodd: simple path combining preserves overlaps needed for holes
-        // For nonzero: UNION combining per SVG spec
+        // Use clipPath's clipRule to determine both path combining and fill type.
+        // evenodd: use simple addPath to preserve self-intersecting path winding
+        // nonzero: use Path.Op.UNION to properly combine overlapping children
+        // (UNION flattens path structure, breaking evenodd hole detection)
         Path clipPath =
             mClipNode.mClipRule == CLIP_RULE_EVENODD
                 ? mClipNode.getPath(canvas, paint)
@@ -440,7 +440,9 @@ public abstract class VirtualView extends ReactViewGroup {
 
   double relativeOnWidth(SVGLength length) {
     SvgView svg = getSvgView();
-    if (length.unit == SVGLength.UnitType.PERCENTAGE && svg != null && svg.getViewBox().width() != 0) {
+    if (length.unit == SVGLength.UnitType.PERCENTAGE
+        && svg != null
+        && svg.getViewBox().width() != 0) {
       return relativeOn(length, svg.getViewBox().width());
     }
     return relativeOn(length, getCanvasWidth());
@@ -448,7 +450,9 @@ public abstract class VirtualView extends ReactViewGroup {
 
   double relativeOnHeight(SVGLength length) {
     SvgView svg = getSvgView();
-    if (length.unit == SVGLength.UnitType.PERCENTAGE && svg != null && svg.getViewBox().height() != 0) {
+    if (length.unit == SVGLength.UnitType.PERCENTAGE
+        && svg != null
+        && svg.getViewBox().height() != 0) {
       return relativeOn(length, svg.getViewBox().height());
     }
     return relativeOn(length, getCanvasHeight());
@@ -615,13 +619,13 @@ public abstract class VirtualView extends ReactViewGroup {
         UIManagerHelper.getEventDispatcherForReactTag(mContext, getId());
     if (eventDispatcher != null) {
       eventDispatcher.dispatchEvent(
-        new SvgOnLayoutEvent(
-          UIManagerHelper.getSurfaceId(VirtualView.this),
-          this.getId(),
-          left,
-          top,
-          width,
-          height));
+          new SvgOnLayoutEvent(
+              UIManagerHelper.getSurfaceId(VirtualView.this),
+              this.getId(),
+              left,
+              top,
+              width,
+              height));
     }
   }
 

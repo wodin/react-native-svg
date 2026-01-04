@@ -292,6 +292,14 @@ using namespace facebook::react;
   }
 }
 
+- (BOOL)containsPoint:(CGPoint)point inPath:(CGPathRef)clipPath context:(CGContextRef)context
+{
+  RNSVGCGFCRule clipRule;
+  BOOL hasUniformRule = [self getUniformClipRule:&clipRule context:context];
+  BOOL useEvenodd = hasUniformRule ? (clipRule == kRNSVGCGFCRuleEvenodd) : YES;
+  return CGPathContainsPoint(clipPath, nil, point, useEvenodd);
+}
+
 @end
 
 #ifdef RCT_NEW_ARCH_ENABLED
