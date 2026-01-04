@@ -9,6 +9,8 @@
 #import "RNSVGClipPath.h"
 #import "RNSVGMask.h"
 
+#import <React/RCTLog.h>
+
 #include <vector>
 
 typedef enum {
@@ -195,6 +197,7 @@ using namespace facebook::react;
   CGColorSpaceRelease(colorSpace);
 
   if (!bitmapContext) {
+    RCTLogWarn(@"RNSVG: Failed to create bitmap context for ClipPath mask (width=%zu, height=%zu)", width, height);
     return NULL;
   }
 
