@@ -9,6 +9,14 @@
 #import "RNSVGClipPath.h"
 #import "RNSVGMask.h"
 
+#include <vector>
+
+typedef enum {
+  RNSVGClipPathStrategyUnknown,
+  RNSVGClipPathStrategyFast,
+  RNSVGClipPathStrategyMask
+} RNSVGClipPathStrategy;
+
 #ifdef RCT_NEW_ARCH_ENABLED
 #import <React/RCTConversions.h>
 #import <React/RCTFabricComponentsPlugins.h>
@@ -17,7 +25,9 @@
 #import "RNSVGFabricConversions.h"
 #endif // RCT_NEW_ARCH_ENABLED
 
-@implementation RNSVGClipPath
+@implementation RNSVGClipPath {
+  RNSVGClipPathStrategy _clipPathStrategy;
+}
 
 #ifdef RCT_NEW_ARCH_ENABLED
 using namespace facebook::react;
@@ -57,6 +67,12 @@ using namespace facebook::react;
 }
 #endif // RCT_NEW_ARCH_ENABLED
 
+- (void)invalidate
+{
+  _clipPathStrategy = RNSVGClipPathStrategyUnknown;
+  [super invalidate];
+}
+
 - (void)parseReference
 {
   self.dirty = false;
@@ -66,7 +82,8 @@ using namespace facebook::react;
 - (BOOL)hasOverlappingChildren:(CGContextRef)context
 {
   // Collect all child bounds
-  NSMutableArray<NSValue *> *childBounds = [NSMutableArray array];
+  std::vector<CGRect> childBounds;
+  childBounds.reserve(4);
 
   [self traverseSubviews:^(RNSVGNode *node) {
     if ([node isKindOfClass:[RNSVGNode class]] && ![node isKindOfClass:[RNSVGMask class]]) {
@@ -74,17 +91,18 @@ using namespace facebook::react;
       if (nodePath) {
         CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
         nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
-        [childBounds addObject:[NSValue valueWithCGRect:nodeBounds]];
+        childBounds.push_back(nodeBounds);
       }
     }
     return YES;
   }];
 
   // Check if any pair of bounds intersects
-  for (NSUInteger i = 0; i < childBounds.count; i++) {
-    CGRect rect1 = [childBounds[i] CGRectValue];
-    for (NSUInteger j = i + 1; j < childBounds.count; j++) {
-      CGRect rect2 = [childBounds[j] CGRectValue];
+  size_t count = childBounds.size();
+  for (size_t i = 0; i < count; i++) {
+    const CGRect &rect1 = childBounds[i];
+    for (size_t j = i + 1; j < count; j++) {
+      const CGRect &rect2 = childBounds[j];
       if (CGRectIntersectsRect(rect1, rect2)) {
         return YES;
       }
@@ -123,7 +141,7 @@ using namespace facebook::react;
   return NO;
 }
 
-- (CGImageRef)createMask:(CGContextRef)context
+- (CGImageRef)createMask:(CGContextRef)context bounds:(CGRect *)outBounds
 {
   // Calculate bounds of all ClipPath children in final coordinate space
   // (including both child transforms and clipPath's own transform)
@@ -141,6 +159,10 @@ using namespace facebook::react;
     }
     return YES;
   }];
+
+  if (outBounds) {
+    *outBounds = clipBounds;
+  }
 
   // Handle empty bounds
   if (CGRectIsNull(clipBounds) || CGRectIsEmpty(clipBounds)) {
@@ -169,14 +191,7 @@ using namespace facebook::react;
   }
 
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray();
-  CGContextRef bitmapContext = CGBitmapContextCreate(
-      NULL,
-      width,
-      height,
-      8,
-      width,
-      colorSpace,
-      kCGImageAlphaNone);
+  CGContextRef bitmapContext = CGBitmapContextCreate(NULL, width, height, 8, width, colorSpace, kCGImageAlphaNone);
   CGColorSpaceRelease(colorSpace);
 
   if (!bitmapContext) {
@@ -225,6 +240,43 @@ using namespace facebook::react;
   CGContextRelease(bitmapContext);
 
   return maskImage;
+}
+
+- (BOOL)canUseFastPath:(CGContextRef)context clipRule:(RNSVGCGFCRule *)outClipRule
+{
+  if (_clipPathStrategy != RNSVGClipPathStrategyUnknown) {
+    if (_clipPathStrategy == RNSVGClipPathStrategyFast) {
+      if (outClipRule) {
+        [self getUniformClipRule:outClipRule context:context];
+      }
+      return YES;
+    }
+    return NO;
+  }
+
+  // Check if clipPath is simple (single non-Group child)
+  NSArray<RNSVGPlatformView *> *children = self.subviews;
+  BOOL isSimple = (children.count == 1) && ([children[0] class] != [RNSVGGroup class]);
+
+  // Check if children don't overlap
+  BOOL hasOverlap = !isSimple && [self hasOverlappingChildren:context];
+
+  // Check if all children have uniform clipRule
+  RNSVGCGFCRule clipRule = kRNSVGCGFCRuleNonzero;
+  BOOL isUniform = [self getUniformClipRule:&clipRule context:context];
+
+  BOOL canUseFastPath = (isSimple || !hasOverlap) && isUniform;
+
+  if (canUseFastPath) {
+    _clipPathStrategy = RNSVGClipPathStrategyFast;
+    if (outClipRule) {
+      *outClipRule = clipRule;
+    }
+    return YES;
+  } else {
+    _clipPathStrategy = RNSVGClipPathStrategyMask;
+    return NO;
+  }
 }
 
 @end

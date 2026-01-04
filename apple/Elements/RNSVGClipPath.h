@@ -15,7 +15,8 @@
 @interface RNSVGClipPath : RNSVGGroup
 
 - (BOOL)hasOverlappingChildren:(CGContextRef)context;
-- (CGImageRef)createMask:(CGContextRef)context;
+- (CGImageRef)createMask:(CGContextRef)context bounds:(CGRect *)outBounds;
 - (BOOL)getUniformClipRule:(RNSVGCGFCRule *)outClipRule context:(CGContextRef)context;
+- (BOOL)canUseFastPath:(CGContextRef)context clipRule:(RNSVGCGFCRule *)outClipRule;
 
 @end

@@ -244,9 +244,9 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   if (_markerPath == markerPath) {
     return;
   }
-  
+
   CGPathRelease(_markerPath);
-  
+
   _markerPath = markerPath;
   [self invalidate];
 }
@@ -280,13 +280,12 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
 #ifdef RCT_NEW_ARCH_ENABLED
   if (_eventEmitter != nullptr) {
     static_cast<const RNSVGGroupEventEmitter &>(*_eventEmitter)
-      .onSvgLayout(
-        {.layout = {
-            .x = static_cast<int>(_clientRect.origin.x),
-            .y = static_cast<int>(_clientRect.origin.y),
-            .width = static_cast<int>(_clientRect.size.width),
-            .height = static_cast<int>(_clientRect.size.height)
-        }});
+        .onSvgLayout(
+            {.layout = {
+                 .x = static_cast<int>(_clientRect.origin.x),
+                 .y = static_cast<int>(_clientRect.origin.y),
+                 .width = static_cast<int>(_clientRect.size.width),
+                 .height = static_cast<int>(_clientRect.size.height)}});
   }
 #else
   if (self.onSvgLayout) {
@@ -422,16 +421,8 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
     _cachedClipMask = nil;
   }
 
-  // Check if clipPath is simple (single non-Group child) for fast path
-  NSArray<RNSVGPlatformView *> *children = _clipNode.subviews;
-  BOOL isSimple = (children.count == 1) && ([children[0] class] != [RNSVGGroup class]);
-
-  // Check if children don't overlap for fast path optimization
-  BOOL hasOverlap = !isSimple && [_clipNode hasOverlappingChildren:context];
-
-  // For fast path, check if all children have uniform clipRule
   RNSVGCGFCRule clipRule;
-  BOOL canUseFastPath = (isSimple || !hasOverlap) && [_clipNode getUniformClipRule:&clipRule context:context];
+  BOOL canUseFastPath = [_clipNode canUseFastPath:context clipRule:&clipRule];
 
   if (canUseFastPath) {
     // Fast path: single child or non-overlapping children with uniform clipRule
@@ -447,26 +438,9 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   } else {
     // Slow path: overlapping children, use mask-based clipping
     if (!_cachedClipMask) {
-      _cachedClipMask = [_clipNode createMask:context];
-
-      // Store bounds for mask positioning (including clipPath transform)
-      if (_cachedClipMask) {
-        __block CGRect clipBounds = CGRectNull;
-        [_clipNode traverseSubviews:^(RNSVGNode *node) {
-          if ([node isKindOfClass:[RNSVGNode class]]) {
-            CGPathRef nodePath = [node getPath:context];
-            if (nodePath) {
-              CGRect nodeBounds = CGPathGetBoundingBox(nodePath);
-              // Apply child's transform then clipPath's transform
-              nodeBounds = CGRectApplyAffineTransform(nodeBounds, node.matrix);
-              nodeBounds = CGRectApplyAffineTransform(nodeBounds, _clipNode.matrix);
-              clipBounds = CGRectUnion(clipBounds, nodeBounds);
-            }
-          }
-          return YES;
-        }];
-        _cachedClipMaskBounds = clipBounds;
-      }
+      CGRect maskBounds;
+      _cachedClipMask = [_clipNode createMask:context bounds:&maskBounds];
+      _cachedClipMaskBounds = maskBounds;
     }
 
     if (_cachedClipMask) {
