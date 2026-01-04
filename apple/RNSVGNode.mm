@@ -430,28 +430,35 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   BOOL canUseFastPath = [_clipNode canUseFastPath:context clipRule:&clipRule];
 
   if (canUseFastPath) {
-    // Fast path: single child or non-overlapping children with uniform clipRule
-    CGPathRef clipPath = [self getClipPath:context];
-    if (clipPath) {
-      CGContextAddPath(context, clipPath);
-      if (clipRule == kRNSVGCGFCRuleEvenodd) {
-        CGContextEOClip(context);
-      } else {
-        CGContextClip(context);
-      }
-    }
+    [self applyFastPathClipping:context clipRule:clipRule];
   } else {
-    // Slow path: overlapping children, use mask-based clipping
-    if (!_cachedClipMask) {
-      CGRect maskBounds;
-      _cachedClipMask = [_clipNode createMask:context bounds:&maskBounds];
-      _cachedClipMaskBounds = maskBounds;
-    }
+    [self applyMaskClipping:context];
+  }
+}
 
-    if (_cachedClipMask) {
-      // Mask bounds already include clipPath transform, apply directly
-      CGContextClipToMask(context, _cachedClipMaskBounds, _cachedClipMask);
+- (void)applyFastPathClipping:(CGContextRef)context clipRule:(RNSVGCGFCRule)clipRule
+{
+  CGPathRef clipPath = [self getClipPath:context];
+  if (clipPath) {
+    CGContextAddPath(context, clipPath);
+    if (clipRule == kRNSVGCGFCRuleEvenodd) {
+      CGContextEOClip(context);
+    } else {
+      CGContextClip(context);
     }
+  }
+}
+
+- (void)applyMaskClipping:(CGContextRef)context
+{
+  if (!_cachedClipMask) {
+    CGRect maskBounds;
+    _cachedClipMask = [_clipNode createMask:context bounds:&maskBounds];
+    _cachedClipMaskBounds = maskBounds;
+  }
+
+  if (_cachedClipMask) {
+    CGContextClipToMask(context, _cachedClipMaskBounds, _cachedClipMask);
   }
 }
 
