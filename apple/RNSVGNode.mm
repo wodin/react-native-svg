@@ -46,6 +46,7 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
     _matrix = CGAffineTransformIdentity;
     _invmatrix = CGAffineTransformIdentity;
     _opacity = 1;
+    _clipRule = kRNSVGCGFCRuleNonzero;
     _merging = false;
     _dirty = false;
   }
@@ -708,7 +709,7 @@ CGFloat const RNSVG_DEFAULT_FONT_SIZE = 12;
   _name = nil;
   _display = nil;
   _opacity = 1;
-  _clipRule = kRNSVGCGFCRuleEvenodd;
+  _clipRule = kRNSVGCGFCRuleNonzero;
   _clipPath = nil;
   _mask = nil;
   _markerStart = nil;
