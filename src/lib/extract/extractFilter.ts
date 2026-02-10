@@ -19,7 +19,6 @@ import { NumberProp } from './types';
 const spaceReg = /\s+/;
 
 const validBlendModes = new Set([
-  'unknown',
   'normal',
   'multiply',
   'screen',
