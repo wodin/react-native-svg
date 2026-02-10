@@ -35,7 +35,7 @@ export default class Filter extends Shape<FilterProps> {
     let validFilterUnits = filterUnits;
     if (filterUnits && !Filter.validUnits.has(filterUnits)) {
       console.warn(`RNSVG: Unsupported filterUnits "${filterUnits}"`);
-      validFilterUnits = undefined;
+      validFilterUnits = 'objectBoundingBox';
     }
     let validPrimitiveUnits = primitiveUnits;
     if (primitiveUnits && !Filter.validUnits.has(primitiveUnits)) {
