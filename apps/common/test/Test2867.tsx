@@ -27,6 +27,18 @@ const colorMatrixSvg = `
 </svg>
 `;
 
+// Bad type with no values attr → mType defaults to MATRIX, mValues is null
+const colorMatrixNullValuesSvg = `
+<svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="cmNull">
+      <feColorMatrix type="badType"/>
+    </filter>
+  </defs>
+  <circle cx="100" cy="50" r="40" fill="green" filter="url(#cmNull)"/>
+</svg>
+`;
+
 const compositeSvg = `
 <svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -73,6 +85,9 @@ export default function Test2867() {
 
       <Text>feColorMatrix type="badType"</Text>
       <SvgXml xml={colorMatrixSvg} />
+
+      <Text>feColorMatrix type="badType" (no values)</Text>
+      <SvgXml xml={colorMatrixNullValuesSvg} />
 
       <Text>feComposite operator="badOp"</Text>
       <SvgXml xml={compositeSvg} />
