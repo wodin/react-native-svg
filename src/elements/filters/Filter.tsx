@@ -40,7 +40,7 @@ export default class Filter extends Shape<FilterProps> {
     let validPrimitiveUnits = primitiveUnits;
     if (primitiveUnits && !Filter.validUnits.has(primitiveUnits)) {
       console.warn(`RNSVG: Unsupported primitiveUnits "${primitiveUnits}"`);
-      validPrimitiveUnits = undefined;
+      validPrimitiveUnits = 'userSpaceOnUse';
     }
 
     const filterProps = {
